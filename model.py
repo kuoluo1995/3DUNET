@@ -21,7 +21,7 @@ def dice_coefficient_loss(y_true, y_pred):
 
 def convolution_block(input_layer, n_filters, kernel=(3, 3, 3), padding='same', strides=(1, 1, 1)):
     block = Conv3D(n_filters, kernel, padding=padding, strides=strides)(input_layer)
-    layer = BatchNormalization(axis=1)(block)  ## todo 修改 instanceNormalization
+    layer = BatchNormalization(axis=1)(block)
     return Activation('relu')(layer)
 
 
@@ -39,14 +39,14 @@ def unet_3d(input_shape, n_base_filters=32):
 
     for layer_depth in reversed(range(4)):
         if layer_depth < 4 - 1:
-            _block = UpSampling3D(size=(2, 2, 2))(_block)  # todo Deconvolution3D
+            _block = UpSampling3D(size=(2, 2, 2))(_block)  # or change ti Deconvolution3D
             # _block = Deconvolution3D(filters=n_base_filters * (2 ** layer_depth), kernel_size=(2, 2, 2),
             #                          strides=(2, 2, 2))
             _block = concatenate([_block, bridge_list[layer_depth]], axis=1)
         _block = convolution_block(input_layer=_block, n_filters=n_base_filters * (2 ** layer_depth))
         _block = convolution_block(input_layer=_block, n_filters=n_base_filters * (2 ** layer_depth))
 
-    final_convolution = Conv3D(1, (1, 1, 1), activation='sigmoid')(_block)  # 1为labels
+    final_convolution = Conv3D(1, (1, 1, 1), activation='sigmoid')(_block)
     model = Model(inputs=_input, outputs=final_convolution)
     model.compile(optimizer=Adam(lr=0.00001), loss=dice_coefficient_loss, metrics=[dice_coefficient])
     return model
